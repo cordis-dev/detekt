@@ -25,7 +25,8 @@ open class CodeSmell(
     override val id: String = issue.id
 
     override fun compact(): String = "$id - ${entity.compact()}"
-
+	override fun metric(): String = ""
+	
     override fun compactWithSignature(): String = compact() + " - Signature=" + entity.signature
 
     override fun toString(): String {
@@ -99,6 +100,7 @@ open class ThresholdedCodeSmell(
         get() = metric.threshold
 
     override fun compact(): String = "$id - $metric - ${entity.compact()}"
-
+	override fun metric(): String = "$metric"
+	
     override fun messageOrDescription(): String = if (message.isEmpty()) issue.description else message
 }

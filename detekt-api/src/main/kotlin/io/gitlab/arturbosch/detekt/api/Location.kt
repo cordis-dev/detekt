@@ -53,7 +53,8 @@ data class Location @Deprecated("Consider relative path by passing a [FilePath]"
     ) : this(source, text, file)
 
     override fun compact(): String = "${filePath.absolutePath}:$source"
-
+	override fun metric(): String = ""
+	
     companion object {
         /**
          * Creates a [Location] from a [PsiElement].

@@ -58,7 +58,8 @@ interface Compactable {
      * Contract to format implementing object to a string representation.
      */
     fun compact(): String
-
+    fun metric(): String
+	
     /**
      * Same as [compact] except the content should contain a substring which represents
      * this exact findings via a custom identifier.

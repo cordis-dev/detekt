@@ -34,7 +34,8 @@ data class Entity(
     ) : this(name, signature, location, ktElement)
 
     override fun compact(): String = "[$name] at ${location.compact()}"
-
+	override fun metric(): String = ""
+	
     companion object {
         /**
          * Factory function which retrieves all needed information from the PsiElement itself.
