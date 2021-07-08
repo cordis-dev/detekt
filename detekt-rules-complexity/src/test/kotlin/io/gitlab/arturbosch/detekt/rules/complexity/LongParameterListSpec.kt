@@ -12,8 +12,8 @@ class LongParameterListSpec : Spek({
     val defaultConfig by memoized {
         TestConfig(
             mapOf(
-                LongParameterList.FUNCTION_THRESHOLD to defaultThreshold,
-                LongParameterList.CONSTRUCTOR_THRESHOLD to defaultThreshold
+                "functionThreshold" to defaultThreshold,
+                "constructorThreshold" to defaultThreshold
             )
         )
     }
@@ -45,7 +45,7 @@ class LongParameterListSpec : Spek({
         }
 
         it("does not report long parameter list if parameters with defaults should be ignored") {
-            val config = TestConfig(mapOf(LongParameterList.IGNORE_DEFAULT_PARAMETERS to "true"))
+            val config = TestConfig(mapOf("ignoreDefaultParameters" to "true"))
             val rule = LongParameterList(config)
             val code = "fun long(a: Int, b: Int, c: Int = 2) {}"
             assertThat(rule.compileAndLint(code)).isEmpty()
@@ -76,7 +76,7 @@ class LongParameterListSpec : Spek({
         }
 
         it("reports long parameter list if custom threshold is set") {
-            val config = TestConfig(mapOf(LongParameterList.CONSTRUCTOR_THRESHOLD to "1"))
+            val config = TestConfig(mapOf("constructorThreshold" to "1"))
             val rule = LongParameterList(config)
             val code = "class LongCtor(a: Int)"
             assertThat(rule.compileAndLint(code)).hasSize(1)
@@ -85,8 +85,8 @@ class LongParameterListSpec : Spek({
         it("does not report long parameter list for constructors of data classes if asked") {
             val config = TestConfig(
                 mapOf(
-                    LongParameterList.IGNORE_DATA_CLASSES to "true",
-                    LongParameterList.CONSTRUCTOR_THRESHOLD to "1"
+                    "ignoreDataClasses" to "true",
+                    "constructorThreshold" to "1"
                 )
             )
             val rule = LongParameterList(config)
@@ -99,9 +99,14 @@ class LongParameterListSpec : Spek({
             val config by memoized {
                 TestConfig(
                     mapOf(
-                        LongParameterList.IGNORE_ANNOTATED to listOf("Generated", "kotlin.Deprecated", "kotlin.jvm.JvmName"),
-                        LongParameterList.FUNCTION_THRESHOLD to 1,
-                        LongParameterList.CONSTRUCTOR_THRESHOLD to 1
+                        "ignoreAnnotated" to listOf(
+                            "Generated",
+                            "kotlin.Deprecated",
+                            "kotlin.jvm.JvmName",
+                            "kotlin.Suppress"
+                        ),
+                        "functionThreshold" to 1,
+                        "constructorThreshold" to 1
                     )
                 )
             }
@@ -152,6 +157,38 @@ class LongParameterListSpec : Spek({
             it("does not report long parameter list for functions if function is annotated with ignored annotation") {
                 val code = """class Data {
                     @kotlin.Deprecated(message = "") fun foo(a: Int, b: Int, c: Int, d: Int, e: Int, f: Int, g: Int) {} }
+                """
+                assertThat(rule.compileAndLint(code)).isEmpty()
+            }
+
+            it("reports long parameter list for constructors if constructor parameters are annotated with annotation that is not ignored") {
+                val code = """
+                    @Target(AnnotationTarget.VALUE_PARAMETER)
+                    annotation class CustomAnnotation
+
+                    class Data constructor(@CustomAnnotation val a: Int)
+                """
+                assertThat(rule.compileAndLint(code)).hasSize(1)
+            }
+
+            it("reports long parameter list for functions if enough function parameters are annotated with annotation that is not ignored") {
+                val code = """
+                    @Target(AnnotationTarget.VALUE_PARAMETER)
+                    annotation class CustomAnnotation
+
+                    class Data { fun foo(@CustomAnnotation a: Int) {} }
+                """
+                assertThat(rule.compileAndLint(code)).hasSize(1)
+            }
+
+            it("does not report long parameter list for constructors if enough constructor parameters are annotated with ignored annotation") {
+                val code = "class Data constructor(@kotlin.Suppress(\"\") val a: Int)"
+                assertThat(rule.compileAndLint(code)).isEmpty()
+            }
+
+            it("does not report long parameter list for functions if enough function parameters are annotated with ignored annotation") {
+                val code = """class Data {
+                    fun foo(@kotlin.Suppress("") a: Int) {} }
                 """
                 assertThat(rule.compileAndLint(code)).isEmpty()
             }

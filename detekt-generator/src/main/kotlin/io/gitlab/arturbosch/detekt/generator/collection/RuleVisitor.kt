@@ -4,6 +4,7 @@ import io.gitlab.arturbosch.detekt.api.Debt
 import io.gitlab.arturbosch.detekt.api.DetektVisitor
 import io.gitlab.arturbosch.detekt.api.ThresholdRule
 import io.gitlab.arturbosch.detekt.api.internal.ActiveByDefault
+import io.gitlab.arturbosch.detekt.api.internal.AutoCorrectable
 import io.gitlab.arturbosch.detekt.api.internal.RequiresTypeResolution
 import io.gitlab.arturbosch.detekt.formatting.FormattingRule
 import io.gitlab.arturbosch.detekt.generator.collection.exception.InvalidAliasesDeclaration
@@ -33,7 +34,6 @@ internal class RuleVisitor : DetektVisitor() {
     private var debt = ""
     private var aliases: String? = null
     private var parent = ""
-    private var configurationByKdoc = emptyList<Configuration>()
     private val configurationCollector = ConfigurationCollector()
     private val classesMap = mutableMapOf<String, Boolean>()
 
@@ -43,11 +43,6 @@ internal class RuleVisitor : DetektVisitor() {
         }
 
         val configurationByAnnotation = configurationCollector.getConfiguration()
-        if (configurationByAnnotation.isNotEmpty() && configurationByKdoc.isNotEmpty()) {
-            throw InvalidDocumentationException(
-                "Rule $name is using both annotations and kdoc to define configuration parameter."
-            )
-        }
 
         return Rule(
             name = name,
@@ -59,7 +54,7 @@ internal class RuleVisitor : DetektVisitor() {
             debt = debt,
             aliases = aliases,
             parent = parent,
-            configuration = configurationByAnnotation + configurationByKdoc,
+            configuration = configurationByAnnotation,
             autoCorrect = autoCorrect,
             requiresTypeResolution = requiresTypeResolution
         )
@@ -88,7 +83,7 @@ internal class RuleVisitor : DetektVisitor() {
             return
         }
 
-        name = classOrObject.name?.trim() ?: ""
+        name = checkNotNull(classOrObject.name?.trim()) { "Unable to determine rule name." }
 
         // Use unparsed KDoc text here to check for tabs
         // Parsed [KDocSection] element contains no tabs
@@ -96,14 +91,20 @@ internal class RuleVisitor : DetektVisitor() {
             throw InvalidDocumentationException("KDoc for rule $name must not contain tabs")
         }
 
+        if (classOrObject.hasConfigurationKDocTag()) {
+            throw InvalidDocumentationException(
+                "Configuration of rule $name is invalid. Rule configuration via KDoc tag is no longer supported. " +
+                    "Use config delegate instead."
+            )
+        }
+
         if (classOrObject.isAnnotatedWith(ActiveByDefault::class)) {
             val activeByDefaultSinceValue = classOrObject.firstAnnotationParameter(ActiveByDefault::class)
             defaultActivationStatus = Active(since = activeByDefaultSinceValue)
         }
 
-        autoCorrect = classOrObject.hasKDocTag(TAG_AUTO_CORRECT)
+        autoCorrect = classOrObject.isAnnotatedWith(AutoCorrectable::class)
         requiresTypeResolution = classOrObject.isAnnotatedWith(RequiresTypeResolution::class)
-        configurationByKdoc = classOrObject.parseConfigurationTags()
 
         documentationCollector.setClass(classOrObject)
     }
@@ -168,8 +169,6 @@ internal class RuleVisitor : DetektVisitor() {
             ThresholdRule::class.simpleName,
             EmptyRule::class.simpleName
         )
-
-        private const val TAG_AUTO_CORRECT = "autoCorrect"
 
         private const val ISSUE_ARGUMENT_SIZE = 4
         private const val DEBT_ARGUMENT_INDEX = 3

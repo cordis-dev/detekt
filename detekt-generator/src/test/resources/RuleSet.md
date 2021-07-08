@@ -26,6 +26,16 @@ a wildcard import
 
   list config
 
+* ~~``conf4``~~ (default: ``['a', 'b']``)
+
+  **Deprecated**: use conf3 instead
+
+  deprecated list config
+
+* ``conf5`` (default: ``120``) (android default: ``100``)
+
+  rule with android variants
+
 #### Noncompliant Code:
 
 ```kotlin

@@ -20,13 +20,36 @@ internal fun createRuleSetPage(): RuleSetPage {
                     name = "rulesetconfig1",
                     description = "description rulesetconfig1",
                     defaultValue = "true",
+                    defaultAndroidValue = null,
                     deprecated = null
                 ),
                 Configuration(
                     name = "rulesetconfig2",
                     description = "description rulesetconfig2",
                     defaultValue = "['foo', 'bar']",
+                    defaultAndroidValue = null,
+                    deprecated = null
+                ),
+                Configuration(
+                    name = "deprecatedSimpleConfig",
+                    description = "description deprecatedSimpleConfig",
+                    defaultValue = "true",
+                    defaultAndroidValue = null,
                     deprecated = "is deprecated"
+                ),
+                Configuration(
+                    name = "deprecatedListConfig",
+                    description = "description deprecatedListConfig",
+                    defaultValue = "['foo', 'bar']",
+                    defaultAndroidValue = null,
+                    deprecated = "is deprecated"
+                ),
+                Configuration(
+                    name = "rulesetconfig3",
+                    description = "description rulesetconfig2",
+                    defaultValue = "['first', 'se*cond']",
+                    defaultAndroidValue = null,
+                    deprecated = null
                 )
             )
         )
@@ -45,9 +68,11 @@ internal fun createRules(): List<Rule> {
         aliases = "alias1, alias2",
         parent = "",
         configuration = listOf(
-            Configuration("conf1", "a config option", "foo", null),
-            Configuration("conf2", "deprecated config", "false", "use conf1 instead"),
-            Configuration("conf3", "list config", "['a', 'b']", null),
+            Configuration("conf1", "a config option", "foo", null, null),
+            Configuration("conf2", "deprecated config", "false", null, "use conf1 instead"),
+            Configuration("conf3", "list config", "['a', 'b']", null, null),
+            Configuration("conf4", "deprecated list config", "['a', 'b']", null, "use conf3 instead"),
+            Configuration("conf5", "rule with android variants", "120", "100", null),
         )
     )
     val rule2 = Rule(

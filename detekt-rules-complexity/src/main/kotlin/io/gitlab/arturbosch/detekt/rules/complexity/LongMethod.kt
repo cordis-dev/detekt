@@ -1,15 +1,18 @@
 package io.gitlab.arturbosch.detekt.rules.complexity
 
 import io.github.detekt.metrics.linesOfCode
+import io.gitlab.arturbosch.detekt.api.AnnotationExcluder
 import io.gitlab.arturbosch.detekt.api.Config
 import io.gitlab.arturbosch.detekt.api.Debt
 import io.gitlab.arturbosch.detekt.api.Entity
 import io.gitlab.arturbosch.detekt.api.Issue
 import io.gitlab.arturbosch.detekt.api.Metric
+import io.gitlab.arturbosch.detekt.api.Rule
 import io.gitlab.arturbosch.detekt.api.Severity
-import io.gitlab.arturbosch.detekt.api.ThresholdRule
 import io.gitlab.arturbosch.detekt.api.ThresholdedCodeSmell
 import io.gitlab.arturbosch.detekt.api.internal.ActiveByDefault
+import io.gitlab.arturbosch.detekt.api.internal.Configuration
+import io.gitlab.arturbosch.detekt.api.internal.config
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.psiUtil.getStrictParentOfType
@@ -21,14 +24,9 @@ import java.util.IdentityHashMap
  * Prefer smaller methods with clear names that describe their functionality clearly.
  *
  * Extract parts of the functionality of long methods into separate, smaller methods.
- *
- * @configuration threshold - number of lines in a method to trigger the rule (default: `60`)
  */
 @ActiveByDefault(since = "1.0.0")
-class LongMethod(
-    config: Config = Config.empty,
-    threshold: Int = DEFAULT_THRESHOLD_METHOD_LENGTH
-) : ThresholdRule(config, threshold) {
+class LongMethod(config: Config = Config.empty) : Rule(config) {
 
     override val issue = Issue(
         "LongMethod",
@@ -38,9 +36,17 @@ class LongMethod(
         Debt.TWENTY_MINS
     )
 
+    @Configuration("number of lines in a method to trigger the rule")
+    private val threshold: Int by config(defaultValue = 60)
+
+    @Configuration("ignore long methods in the context of these annotation class names")
+    private val ignoreAnnotated: List<String> by config(emptyList())
+
     private val functionToLinesCache = HashMap<KtNamedFunction, Int>()
     private val functionToBodyLinesCache = HashMap<KtNamedFunction, Int>()
     private val nestedFunctionTracking = IdentityHashMap<KtNamedFunction, HashSet<KtNamedFunction>>()
+
+    private lateinit var annotationExcluder: AnnotationExcluder
 
     override fun preVisit(root: KtFile) {
         functionToLinesCache.clear()
@@ -71,6 +77,8 @@ class LongMethod(
     }
 
     override fun visitNamedFunction(function: KtNamedFunction) {
+        if (annotationExcluder.shouldExclude(function.annotationEntries)) return
+
         val parentMethods = function.getStrictParentOfType<KtNamedFunction>()
         val bodyEntity = function.bodyBlockExpression ?: function.bodyExpression
         val lines = (if (parentMethods != null) function else bodyEntity)?.linesOfCode() ?: 0
@@ -84,15 +92,16 @@ class LongMethod(
             ?.let { functionToLinesCache[function] = lines - it }
     }
 
+    override fun visitKtFile(file: KtFile) {
+        annotationExcluder = AnnotationExcluder(file, ignoreAnnotated)
+        super.visitKtFile(file)
+    }
+
     private fun findAllNestedFunctions(startFunction: KtNamedFunction): Sequence<KtNamedFunction> = sequence {
         var nestedFunctions = nestedFunctionTracking[startFunction]
         while (!nestedFunctions.isNullOrEmpty()) {
             yieldAll(nestedFunctions)
             nestedFunctions = nestedFunctions.mapNotNull { nestedFunctionTracking[it] }.flattenTo(HashSet())
         }
-    }
-
-    companion object {
-        const val DEFAULT_THRESHOLD_METHOD_LENGTH = 60
     }
 }

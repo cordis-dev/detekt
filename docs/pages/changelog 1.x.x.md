@@ -6,6 +6,22 @@ permalink: changelog.html
 toc: true
 ---
 
+#### 1.17.1 - 2021-05-19
+
+##### Notable Changes
+
+This is a patch release for Detekt `1.17.0` including fixes that we considered worth a point release. 
+
+Specifically, we're reverting a change on our Gradle Plugin. The original change [#3655](https://github.com/detekt/detekt/pull/3655) resulted in several false positives when using rules with Type Resolution on Java/Kotlin mixed codebases.
+
+Moreover we included a couple of false positive fixes for `NoNameShadowing` and `UnnecessaryLet`
+
+##### Changelog
+
+- Revert "Noisy gradle (#3655)" - [#3792](https://github.com/detekt/detekt/pull/3792)
+- NoNameShadowing: don't report when implicit 'it' parameter isn't used - [#3793](https://github.com/detekt/detekt/pull/3793)
+- UnnecessaryLet: report when implicit parameter isn't used - [#3794](https://github.com/detekt/detekt/pull/3794)
+
 #### 1.17.0 - 2021-05-15
 
 ##### Notable Changes
@@ -276,7 +292,6 @@ You may experience some known issues when your project already uses 1.4.20
 In addition to many rule improvements, there are also new ones:
 
 - RedundantHigherOrderMapUsage
-- ListAllWhenCases
 - UseIfEmptyOrIfBlank
 
 We added documentation on how to configure [type resolution](https://detekt.github.io/detekt/type-resolution.html).  
@@ -329,7 +344,6 @@ Rule authors can use `TestConfig(Map)` or `yamlConfig(String)` from `detekt-test
 - Fix false negative in IgnoredReturnValue - [#3179](https://github.com/detekt/detekt/pull/3179)
 - Fix false positive when `to` is used to create a pair within a function - [#3178](https://github.com/detekt/detekt/pull/3178)
 - False Positive PreferToOverPairSyntax - [#3177](https://github.com/detekt/detekt/issues/3177)
-- ListAllWhenCases new rule - [#3176](https://github.com/detekt/detekt/issues/3176)
 - Suppress RedundantVisibilityModifierRule if explicit API mode enabled - [#3175](https://github.com/detekt/detekt/pull/3175)
 - Hardcode default values - [#3171](https://github.com/detekt/detekt/pull/3171)
 - False negative in IgnoredReturnValue - [#3170](https://github.com/detekt/detekt/issues/3170)
