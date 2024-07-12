@@ -35,6 +35,7 @@ class XmlOutputReport : OutputReport() {
                         "column=\"${it.location.source.column.toXmlString()}\"",
                         "severity=\"${it.severityLabel.toXmlString()}\"",
                         "message=\"${it.messageOrDescription().toXmlString()}\"",
+                        "category=\"${it.issue.severity.toXmlString()}\"",
                         "source=\"${"detekt.${it.id.toXmlString()}"}\" />"
                     ).joinToString(separator = " ")
                 }
