@@ -1,10 +1,11 @@
 [versions]
-dokka = "1.8.10"
-jacoco = "0.8.10"
-kotlin = "1.9.23"
+dokka = "1.9.20"
+jacoco = "0.8.12"
+kotlin = "2.0.10"
 ktlint = "0.50.0"
-junit = "5.9.3"
+junit = "5.10.2"
 contester = "0.2.0"
+slf4j = "2.0.13"
 
 [libraries]
 githubRelease-gradle = "com.github.breadmoirai:github-release:2.4.1"
@@ -28,7 +29,7 @@ android-gradle-minSupported = "com.android.tools.build:gradle:7.0.0"
 
 # This version of AGP is used for testing and should be updated when new AGP versions are released to ensure detekt's
 # Gradle plugin remains compatible.
-android-gradle-maxSupported = "com.android.tools.build:gradle:8.3.1"
+android-gradle-maxSupported = "com.android.tools.build:gradle:8.5.2"
 
 ktlintRulesetStandard = { module = "com.pinterest.ktlint:ktlint-ruleset-standard", version.ref = "ktlint"  }
 slf4j-nop = { module = "org.slf4j:slf4j-nop", version = "2.0.7" }
@@ -36,18 +37,20 @@ slf4j-simple = { module = "org.slf4j:slf4j-simple", version = "2.0.7" }
 
 junit-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
 
-sarif4k = "io.github.detekt.sarif4k:sarif4k:0.4.0"
-assertj = "org.assertj:assertj-core:3.24.2"
+sarif4k = "io.github.detekt.sarif4k:sarif4k:0.6.0"
+assertj = "org.assertj:assertj-core:3.25.3"
 reflections = "org.reflections:reflections:0.10.2"
 mockk = "io.mockk:mockk:1.13.5"
-snakeyaml = "org.snakeyaml:snakeyaml-engine:2.6"
-jcommander = "com.beust:jcommander:1.82"
+snakeyaml = "org.snakeyaml:snakeyaml-engine:2.7"
+jcommander = { module = "org.jcommander:jcommander", version = "1.85" }
 contester-breakpoint = { module = "io.github.davidburstrom.contester:contester-breakpoint", version.ref = "contester" }
 contester-driver = { module = "io.github.davidburstrom.contester:contester-driver", version.ref = "contester" }
-kotlinCompileTesting = { module = "dev.zacsweers.kctfork:core", version = "0.4.0" }
+kotlinCompileTesting = { module = "dev.zacsweers.kctfork:core", version = "0.5.0-alpha07" }
+jetbrains-annotations = "org.jetbrains:annotations:24.1.0"
+poko-annotations = { module = "dev.drewhamilton.poko:poko-annotations", version = "0.16.0" }
 
 [plugins]
-binaryCompatibilityValidator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version = "0.13.1" }
+binaryCompatibilityValidator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version = "0.16.3" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 download = { id = "de.undercouch.download", version = "5.4.0" }
 gradleVersions = { id = "com.github.ben-manes.versions", version = "0.46.0" }

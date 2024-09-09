@@ -3,8 +3,9 @@ import org.jetbrains.dokka.gradle.DokkaTask
 plugins {
     id("module")
     alias(libs.plugins.dokka)
-    `java-test-fixtures`
+    id("java-test-fixtures")
     alias(libs.plugins.binaryCompatibilityValidator)
+    id("dev.drewhamilton.poko") version "0.16.0"
 }
 
 dependencies {
@@ -14,6 +15,8 @@ dependencies {
 
     testImplementation(projects.detektTest)
     testImplementation(libs.assertj)
+    testFixturesImplementation(projects.detektTestUtils)
+    testFixturesImplementation(libs.poko.annotations)
 }
 
 val javaComponent = components["java"] as AdhocComponentWithVariants

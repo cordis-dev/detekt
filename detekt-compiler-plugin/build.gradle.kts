@@ -42,6 +42,12 @@ javaComponent.withVariantsFromConfiguration(configurations["shadowRuntimeElement
     skip()
 }
 
+publishing {
+    publications.named<MavenPublication>(DETEKT_PUBLICATION) {
+        artifact(tasks.shadowJar)
+    }
+}
+
 tasks.test {
     // https://github.com/detekt/detekt/issues/5646
     enabled = false
@@ -91,7 +97,6 @@ val testPluginKotlinc by tasks.registering(Task::class) {
     outputs.dir(outputDir)
 
     val baseExecutablePath = "${unzipKotlinCompiler.get().destinationDir}/kotlinc/bin/kotlinc"
-    val pluginParameters = "plugin:detekt-compiler-plugin:debug=true"
 
     val kotlincExecution = providers.exec {
         workingDir = outputDir.get().asFile
@@ -99,26 +104,39 @@ val testPluginKotlinc by tasks.registering(Task::class) {
 
         args = listOf(
             sourceFile.path,
+            "-language-version",
+            "1.9",
             "-Xplugin=${tasks.shadowJar.get().archiveFile.get().asFile.absolutePath}",
             "-P",
+            "plugin:detekt-compiler-plugin:debug=true".toArg(),
+            "-P",
+            "plugin:detekt-compiler-plugin:useDefaultConfig=true".toArg(),
         )
 
-        if (org.apache.tools.ant.taskdefs.condition.Os.isFamily("windows")) {
-            executable = "$baseExecutablePath.bat"
-            args("\"$pluginParameters\"")
+        executable = if (org.apache.tools.ant.taskdefs.condition.Os.isFamily("windows")) {
+            "$baseExecutablePath.bat"
         } else {
-            executable = baseExecutablePath
-            args(pluginParameters)
+            baseExecutablePath
         }
     }
 
     doLast {
-        if (!kotlincExecution.standardError.asText.get().contains("warning: magicNumber:")) {
+        val stdErrOutput = kotlincExecution.standardError.asText.get()
+        if (!stdErrOutput.contains("warning: doubleMutabilityForCollection:")) {
             throw GradleException(
-                "kotlinc run with compiler plugin did not find MagicNumber issue as expected"
+                """
+                    kotlinc run with compiler plugin did not find DoubleMutabilityForCollection issue in output:
+                    $stdErrOutput
+                """.trimIndent()
             )
         }
     }
+}
+
+private fun String.toArg() = if (org.apache.tools.ant.taskdefs.condition.Os.isFamily("windows")) {
+    "\"$this\""
+} else {
+    this
 }
 
 tasks.check {

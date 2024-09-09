@@ -3,6 +3,7 @@ package io.gitlab.arturbosch.detekt.rules.documentation
 import io.gitlab.arturbosch.detekt.test.TestConfig
 import io.gitlab.arturbosch.detekt.test.compileAndLint
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
 private const val SEARCH_IN_NESTED_CLASS = "searchInNestedClass"
@@ -199,27 +200,6 @@ class UndocumentedPublicClassSpec {
     }
 
     @Test
-    fun `should report for enum classes`() {
-        val code = """
-            enum class Enum {
-                CONSTANT
-            }
-        """.trimIndent()
-        assertThat(subject.compileAndLint(code)).hasSize(1)
-    }
-
-    @Test
-    fun `should not report for enum constants`() {
-        val code = """
-            /** Some doc */
-            enum class Enum {
-                CONSTANT
-            }
-        """.trimIndent()
-        assertThat(subject.compileAndLint(code)).isEmpty()
-    }
-
-    @Test
     fun `should not report for fun interfaces`() {
         val code = """
             /**
@@ -252,7 +232,11 @@ class UndocumentedPublicClassSpec {
     @Test
     fun `does not report protected class by default`() {
         val code = """
-            protected class Test {
+            /**
+             * Sample KDoc for parent class.
+             */
+            class Test {
+                protected class ProtectedClass
             }
         """.trimIndent()
         assertThat(subject.compileAndLint(code)).isEmpty()
@@ -261,10 +245,84 @@ class UndocumentedPublicClassSpec {
     @Test
     fun `reports protected class if configured`() {
         val code = """
-            protected class Test {
+            /**
+             * Sample KDoc for parent class.
+             */
+            class Test {
+                protected class ProtectedClass
             }
         """.trimIndent()
         val subject = UndocumentedPublicClass(TestConfig(SEARCH_IN_PROTECTED_CLASS to "true"))
         assertThat(subject.compileAndLint(code)).hasSize(1)
+    }
+
+    @Test
+    fun `should report in public companion class - #7217`() {
+        val code = """
+            public object PublicObject
+
+            public class PublicClass {
+                public companion object
+            }
+        """.trimIndent()
+        assertThat(subject.compileAndLint(code)).hasSize(3)
+    }
+
+    @Test
+    fun `should not report in private or internal companion class - #7217`() {
+        val code = """
+            public class PublicObject {
+                internal companion object
+            }
+
+            public class PublicClass {
+                private companion object
+            }
+        """.trimIndent()
+        assertThat(subject.compileAndLint(code)).hasSize(2)
+    }
+
+    @Nested
+    inner class `enum classes` {
+        @Test
+        fun `does not report documented enum class in public enum`() {
+            val code = """
+                /**
+                * This is PublicEnum
+                */
+                enum class PublicEnum {
+                    Foo,
+                    Bar,
+                }
+            """.trimIndent()
+            io.gitlab.arturbosch.detekt.test.assertThat(subject.compileAndLint(code)).isEmpty()
+        }
+
+        @Test
+        fun `does report undocumented enum class in public enum`() {
+            val code = """
+                enum class PublicEnum {
+                    Foo,
+                    Bar,
+                }
+            """.trimIndent()
+            io.gitlab.arturbosch.detekt.test.assertThat(subject.compileAndLint(code)).hasSize(1)
+        }
+
+        @Test
+        fun `does not report undocumented enum entries in private and internal enum`() {
+            val code = """
+                private enum class PrivateEnum {
+                    Foo,
+                    Bar,
+                }
+
+                internal enum class InternalEnum {
+                    Foo,
+                    Bar,
+                }
+            """.trimIndent()
+            io.gitlab.arturbosch.detekt.test.assertThat(subject.compileAndLint(code)).isEmpty()
+        }
     }
 }
