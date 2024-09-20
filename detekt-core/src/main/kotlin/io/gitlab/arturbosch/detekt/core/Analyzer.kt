@@ -7,6 +7,7 @@ import io.gitlab.arturbosch.detekt.api.Config
 import io.gitlab.arturbosch.detekt.api.FileProcessListener
 import io.gitlab.arturbosch.detekt.api.Finding
 import io.gitlab.arturbosch.detekt.api.Rule
+import io.gitlab.arturbosch.detekt.api.MultiRule
 import io.gitlab.arturbosch.detekt.api.RuleSetId
 import io.gitlab.arturbosch.detekt.api.RuleSetProvider
 import io.gitlab.arturbosch.detekt.api.internal.CompilerResources
@@ -129,9 +130,19 @@ internal class Analyzer(
         fun executeRules(rules: List<BaseRule>) {
 			val onlyRuleIds = settings.spec.projectSpec.only
             for (rule in rules) {
-				if (onlyRuleIds.isNotEmpty() && !onlyRuleIds.contains(rule.ruleId)) {
-					continue
+				
+				if (onlyRuleIds.isNotEmpty()) {
+					if (rule.ruleId != "KtLintMultiRule" && !onlyRuleIds.contains(rule.ruleId)) {
+						continue
+					}
+					
+					if (rule.ruleId == "KtLintMultiRule") {
+						val multiRule = rule as MultiRule
+						val filteredRules = multiRule.rules.filter { onlyRuleIds.contains(it.ruleId) }
+						multiRule.rules = filteredRules;
+					}
 				}
+				
                 rule.visitFile(file, bindingContext, compilerResources)
                 for (finding in filterSuppressedFindings(rule, bindingContext)) {
                     val mappedRuleSet = checkNotNull(ruleIdsToRuleSetIds[finding.id]) {

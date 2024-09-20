@@ -89,7 +89,7 @@ class KtLintMultiRule(config: Config = Config.empty) :
     @Suppress("DEPRECATION")
     io.gitlab.arturbosch.detekt.api.MultiRule() {
 
-    override val rules: List<Rule> = listOf(
+    override var rules: List<Rule> = listOf(
         // Wrappers for ktlint-ruleset-standard rules. Enabled by default.
         AnnotationOnSeparateLine(config),
         AnnotationSpacing(config),

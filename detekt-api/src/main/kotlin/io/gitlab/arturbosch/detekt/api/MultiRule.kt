@@ -11,7 +11,7 @@ import org.jetbrains.kotlin.psi.KtFile
 @Suppress("ViolatesTypeResolutionRequirements")
 abstract class MultiRule : BaseRule() {
 
-    abstract val rules: List<Rule>
+    abstract var rules: List<Rule>
     var activeRules: Set<Rule> by SingleAssign()
 
     override fun visitCondition(root: KtFile): Boolean = true
