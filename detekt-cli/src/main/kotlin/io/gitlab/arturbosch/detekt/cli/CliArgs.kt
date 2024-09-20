@@ -188,6 +188,12 @@ class CliArgs {
         description = "Prints the detekt CLI version."
     )
     var showVersion: Boolean = false
+	
+    @Parameter(
+        names = ["--only"],
+        description = "Rule IDs to include."
+    )
+    var only: String? = null
 
     val inputPaths: List<Path> by lazy {
         MultipleExistingPathConverter().convert(input ?: System.getProperty("user.dir"))

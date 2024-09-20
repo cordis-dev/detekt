@@ -127,7 +127,11 @@ internal class Analyzer(
         val result = HashMap<RuleSetId, MutableList<Finding>>()
 
         fun executeRules(rules: List<BaseRule>) {
+			val onlyRuleIds = settings.spec.projectSpec.only
             for (rule in rules) {
+				if (onlyRuleIds.isNotEmpty() && !onlyRuleIds.contains(rule.ruleId)) {
+					continue
+				}
                 rule.visitFile(file, bindingContext, compilerResources)
                 for (finding in filterSuppressedFindings(rule, bindingContext)) {
                     val mappedRuleSet = checkNotNull(ruleIdsToRuleSetIds[finding.id]) {

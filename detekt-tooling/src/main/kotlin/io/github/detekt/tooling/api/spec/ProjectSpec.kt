@@ -26,4 +26,6 @@ interface ProjectSpec {
      * Globbing patterns which apply after paths get excluded by [excludes].
      */
     val includes: Collection<String>
+	
+	val only: Collection<String>
 }

@@ -18,6 +18,7 @@ internal fun CliArgs.createSpec(output: Appendable, error: Appendable): Processi
             inputPaths = args.inputPaths
             excludes = asPatterns(args.excludes)
             includes = asPatterns(args.includes)
+			only = asPatterns(args.only)
         }
 
         rules {
